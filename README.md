@@ -11,4 +11,4 @@ pipenv install
 pipenv run GUI.py
 ```
 
-[Link to upstream Discord!](https://discord.gg/6fzHtJM)
+[Link to Discord!](https://discord.gg/6fzHtJM)
