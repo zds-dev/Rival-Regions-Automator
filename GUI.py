@@ -2,6 +2,7 @@ import PySimpleGUI as sg
 from json import (load as jsonload, dump as jsondump)
 from os import path
 from Modules.PerkScheduler import PerkScheduler
+from Modules.TestScheduler import TestScheduler
 import logging
 import threading
 from rival_regions_wrapper.authentication_handler import FILE_FORMATTER
@@ -173,5 +174,5 @@ class GUI:
         self.long_tasks.append(scheduler.__class__)
 
 
-gui = GUI(SETTINGS_FILE=SETTINGS_FILE, long_tasks=[PerkScheduler])
+gui = GUI(SETTINGS_FILE=SETTINGS_FILE, long_tasks=[PerkScheduler,TestScheduler])
 gui.run()
