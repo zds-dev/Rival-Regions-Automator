@@ -6,11 +6,9 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-requests-futures = "*"
-webbot = "*"
-lxml = "*"
-requests = "*"
-cfscrape = "*"
+pysimplegui = "*"
+rival-regions-wrapper = "*"
+selenium = "*"
 
 [requires]
 python_version = "3.8"
