@@ -1,12 +1,10 @@
 from config import read_config
-from rival_regions_wrapper import LocalAuthentication, AuthenticationHandler, ApiWrapper
-from rival_regions_wrapper.api_wrapper import Perks,Overview,Profile
+from rival_regions_wrapper.api_wrapper import Perks
 
-from Modules.ScheduleJob import ScheduleJob
+from modules.ScheduleJob import ScheduleJob
 import threading
 import datetime
 import logging
-
 
 class PerkScheduler(ScheduleJob):
     def __init__(self, perk_type=1, upgrade_type=1, config_file='config.json'):
@@ -16,26 +14,6 @@ class PerkScheduler(ScheduleJob):
 
         self.config = read_config(config_file)
         self.logger = logging.getLogger(__name__)
-
-        #middleware = LocalAuthentication(
-        #    self.config["USERNAME"],
-        #    self.config["PASSWORD"],
-        #    self.config["LOGIN_METHOD"]
-        #)
-        #
-        #middleware.client = AuthenticationHandler()
-        #middleware.client.set_credentials({
-        #    'username': self.config["USERNAME"],
-        #    'password': self.config["PASSWORD"],
-        #    'login_method': self.config["LOGIN_METHOD"]
-        #})
-        #
-        #self.middleware = middleware
-        #self.api_wrapper = ApiWrapper(middleware)
-        #self.overview = Overview(self.api_wrapper)
-        #self.profile = Profile(self.api_wrapper,
-        #                       self.overview.status()['profile_id'])
-        #self.info = self.profile.info()
 
     def check_perk_upgrade(self):
         perks = Perks(self.client.api_wrapper)
@@ -66,7 +44,3 @@ class PerkScheduler(ScheduleJob):
         self.logger.info("Scheduled perk upgrade for in {}. [{} UTC]".format(str(delay), finish.strftime('%c')))
         self.timer_thread = threading.Timer(delay.total_seconds()+60, self.upgrade_perk)
         self.timer_thread.start()
-
-
-
-

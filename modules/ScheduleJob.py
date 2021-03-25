@@ -12,7 +12,7 @@ class ScheduleJob:
         if not ScheduleJob.client:
             ScheduleJob.client = Client()
         else:
-            self.logger.info("Found a created Client. Using...")
+            self.logger.debug("Found a created Client. Using...")
         self.client = ScheduleJob.client
         self.timer_thread = None
         self.schedule_running = False

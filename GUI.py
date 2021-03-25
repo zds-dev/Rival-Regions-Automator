@@ -1,8 +1,8 @@
 import PySimpleGUI as sg
 from json import (load as jsonload, dump as jsondump)
 from os import path
-from Modules.PerkScheduler import PerkScheduler
-from Modules.TestScheduler import TestScheduler
+from modules import PerkScheduler,TestScheduler,Client,ScheduleJob
+
 import logging
 import threading
 from rival_regions_wrapper.authentication_handler import FILE_FORMATTER
@@ -11,7 +11,8 @@ from rival_regions_wrapper.authentication_handler import FILE_FORMATTER
 SETTINGS_FILE = path.join(path.dirname(__file__), r'config.json')
 DEFAULT_SETTINGS = {'USERNAME': 'usernamehere', 'PASSWORD': 'passwordhere', 'LOGIN_METHOD': 'g/v/f'}
 # "Map" from the settings dictionary keys to the window's element keys
-SETTINGS_KEYS_TO_ELEMENT_KEYS = {'USERNAME': '-USERNAME-', 'PASSWORD': '-PASSWORD-', 'LOGIN_METHOD': '-LOGIN METHOD-'}
+SETTINGS_KEYS_TO_ELEMENT_KEYS = {'USERNAME': '-USERNAME-', 'PASSWORD': '-PASSWORD-', 'LOGIN_METHOD': '-LOGIN METHOD-',
+                                 'USER': '-USER-', 'PERKS': '-PERKS-'}
 
 
 class Handler(logging.StreamHandler):
@@ -73,8 +74,10 @@ class Settings:
 
 class GUI:
     def __init__(self, SETTINGS_FILE, long_tasks):
-        self.Setting = Settings(SETTINGS_FILE)
+        self.Settings = Settings(SETTINGS_FILE)
         self.long_tasks = long_tasks
+        self.Client = None
+        threading.Thread(target=self.create_client).start()
         self.running_long_tasks = {}
         self.window = self.create_main_window()
         self.window_handler = Handler(logging_window=self.window)
@@ -82,7 +85,12 @@ class GUI:
         self.window_handler.setLevel(logging.INFO)
         Logger.debug("GUI initialized.")
         Logger.addHandler(self.window_handler)
+        Logger.info("Initializing RR Client")
 
+
+    def create_client(self):
+        self.Client = Client(self.Settings)
+        ScheduleJob.client = self.Client
 
     def create_settings_window(self):
 
@@ -106,7 +114,7 @@ class GUI:
         return window
 
     def create_main_window(self):
-        left_col = [[sg.Multiline(size=(90, 30), key='LOG', font=('Helvetica 10'))],
+        left_col = [[sg.Multiline(size=(120, 30), key='LOG', font=('Helvetica 10'))],
                     [sg.B('Exit'), sg.B('Change Settings')]]
 
         right_col_lower = []
@@ -117,10 +125,8 @@ class GUI:
                 active = True
             right_col_lower.append([sg.Checkbox(long_task, default=active, enable_events=True, key=long_task)])
 
-        right_col = [#[sg.T("Username:")],
-                     #[sg.T("", key="username")],
-                     #[sg.T("Perks:")],
-                     #[sg.T("", key='perks')],
+        right_col = [[sg.T('Player Info')],
+                     [sg.Multiline("",size=(20,10), disabled=True, key="-DETAILS-")],
                      [sg.Column(right_col_lower)]]
 
         layout = [[sg.Column(left_col),sg.Column(right_col)]]
@@ -128,6 +134,7 @@ class GUI:
         window = sg.Window('RRBot', layout, resizable=True)
         window.finalize()
         self.window = window
+        window.write_event_value('botched','botched') # Causes event loop to run on startup.
         return window
 
     def run(self):
@@ -147,6 +154,10 @@ class GUI:
                 if not values[long_task]:
                     t = threading.Thread(target=self.stop_task, args=[long_task])
                     t.start()
+
+            details = self.Client.details
+            details_column = "\n".join([f'{key} {value}' for key, value in details.items()])
+            self.window['-DETAILS-'].update(details_column)
 
             if event in (None, 'Exit'):
                 break

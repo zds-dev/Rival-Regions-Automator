@@ -1,9 +1,11 @@
 from config import read_config
 from rival_regions_wrapper import LocalAuthentication, AuthenticationHandler, ApiWrapper
+from rival_regions_wrapper.api_wrapper import Overview
+
 
 class Client:
-    def __init__(self, config_file='config.json'):
-        self.config = read_config(config_file)
+    def __init__(self, settings):
+        self.config = settings.config
         middleware = LocalAuthentication(
             self.config["USERNAME"],
             self.config["PASSWORD"],
@@ -19,7 +21,8 @@ class Client:
 
         self.middleware = middleware
         self.api_wrapper = ApiWrapper(middleware)
-        # self.overview = Overview(self.api_wrapper)
-        # self.profile = Profile(self.api_wrapper,
-        #                       self.overview.status()['profile_id'])
-        # self.info = self.profile.info()
+        self.details = self.details()
+
+    def details(self):
+        self.details = Overview(self.api_wrapper).status()
+        return self.details

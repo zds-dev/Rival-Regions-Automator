@@ -1,10 +1,5 @@
 from config import read_config
-from rival_regions_wrapper import LocalAuthentication, AuthenticationHandler, ApiWrapper
-from rival_regions_wrapper.api_wrapper import Perks,Overview,Profile
-
-from Modules.ScheduleJob import ScheduleJob
-import threading
-import datetime
+from modules.ScheduleJob import ScheduleJob
 import logging
 
 
