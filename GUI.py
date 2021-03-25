@@ -9,14 +9,13 @@ from rival_regions_wrapper.authentication_handler import FILE_FORMATTER
 
 
 SETTINGS_FILE = path.join(path.dirname(__file__), r'config.json')
-DEFAULT_SETTINGS = {'USERNAME': 'usernamehere', 'PASSWORD': 'passwordhere', 'LOGIN_METHOD': 'g/v/f'}
+DEFAULT_SETTINGS = {'USERNAME': 'username here', 'PASSWORD': 'password here', 'LOGIN_METHOD': 'g/v/f'}
 # "Map" from the settings dictionary keys to the window's element keys
-SETTINGS_KEYS_TO_ELEMENT_KEYS = {'USERNAME': '-USERNAME-', 'PASSWORD': '-PASSWORD-', 'LOGIN_METHOD': '-LOGIN METHOD-',
-                                 'USER': '-USER-', 'PERKS': '-PERKS-'}
+SETTINGS_KEYS_TO_ELEMENT_KEYS = {'USERNAME': '-USERNAME-', 'PASSWORD': '-PASSWORD-', 'LOGIN_METHOD': '-LOGIN METHOD-'}
 
 
 class Handler(logging.StreamHandler):
-    def __init__(self, initial_buffer="", logging_window=None, history=''):
+    def __init__(self, logging_window=None, history=''):
         logging.StreamHandler.__init__(self)
         self.logging_window = logging_window
         self.history = history
@@ -30,7 +29,6 @@ class Handler(logging.StreamHandler):
     def re_emit(self):
         if self.logging_window:
             self.logging_window['LOG'].update(value=self.history, append=True)
-
 
 
 Logger = logging.getLogger()
@@ -73,8 +71,8 @@ class Settings:
 
 
 class GUI:
-    def __init__(self, SETTINGS_FILE, long_tasks):
-        self.Settings = Settings(SETTINGS_FILE)
+    def __init__(self, settings_file, long_tasks):
+        self.Settings = Settings(settings_file)
         self.long_tasks = long_tasks
         self.Client = None
         threading.Thread(target=self.create_client).start()
@@ -86,7 +84,6 @@ class GUI:
         Logger.debug("GUI initialized.")
         Logger.addHandler(self.window_handler)
         Logger.info("Initializing RR Client")
-
 
     def create_client(self):
         self.Client = Client(self.Settings)
@@ -107,14 +104,14 @@ class GUI:
 
         for key in SETTINGS_KEYS_TO_ELEMENT_KEYS:  # update window with the values read from settings file
             try:
-                window[SETTINGS_KEYS_TO_ELEMENT_KEYS[key]].update(value=self.Setting.config[key])
+                window[SETTINGS_KEYS_TO_ELEMENT_KEYS[key]].update(value=self.Settings.config[key])
             except Exception as e:
                 print(f'Problem updating PySimpleGUI window from settings. Key = {key}')
 
         return window
 
     def create_main_window(self):
-        left_col = [[sg.Multiline(size=(120, 30), key='LOG', font=('Helvetica 10'))],
+        left_col = [[sg.Multiline(size=(140, 30), key='LOG', font=('Helvetica 10'))],
                     [sg.B('Exit'), sg.B('Change Settings')]]
 
         right_col_lower = []
@@ -126,11 +123,10 @@ class GUI:
             right_col_lower.append([sg.Checkbox(long_task, default=active, enable_events=True, key=long_task)])
 
         right_col = [[sg.T('Player Info')],
-                     [sg.Multiline("",size=(20,10), disabled=True, key="-DETAILS-")],
+                     [sg.Multiline("",size=(20,10), disabled=True, key="-DETAILS MULTILINE-")],
                      [sg.Column(right_col_lower)]]
 
         layout = [[sg.Column(left_col),sg.Column(right_col)]]
-
         window = sg.Window('RRBot', layout, resizable=True)
         window.finalize()
         self.window = window
@@ -155,9 +151,13 @@ class GUI:
                     t = threading.Thread(target=self.stop_task, args=[long_task])
                     t.start()
 
-            details = self.Client.details
-            details_column = "\n".join([f'{key} {value}' for key, value in details.items()])
-            self.window['-DETAILS-'].update(details_column)
+            if self.Client:
+                details = self.Client.details
+                details_column = "\n".join([f'{key} {value}' for key, value in details.items()])
+            else:
+                details_column = ""
+
+            self.window['-DETAILS MULTILINE-'].update(details_column)
 
             if event in (None, 'Exit'):
                 break
@@ -166,8 +166,7 @@ class GUI:
                 if event == 'Save':
                     self.window.close()
                     self.window = None
-                    self.Setting.save_settings(SETTINGS_FILE, self.Setting.config, values)
-
+                    self.Settings.save_settings(SETTINGS_FILE, self.Settings.config, values)
 
         self.window.close()
 
@@ -185,5 +184,5 @@ class GUI:
         self.long_tasks.append(scheduler.__class__)
 
 
-gui = GUI(SETTINGS_FILE=SETTINGS_FILE, long_tasks=[PerkScheduler,TestScheduler])
+gui = GUI(settings_file=SETTINGS_FILE, long_tasks=[PerkScheduler,TestScheduler])
 gui.run()
